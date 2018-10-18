@@ -7,6 +7,7 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
+	"github.com/497-fall2018/GOrange-2/features/gym"
 )
 
 func Routes() *chi.Mux {
@@ -20,7 +21,7 @@ func Routes() *chi.Mux {
 	)
 	// version apis so you can update without breaking i
 	router.Route("/v1", func(r chi.Router) {
-		r.Mount("/api/free", free.Routes())
+		r.Mount("/api/gym", gym.Routes())
 	})
 
 	return router
