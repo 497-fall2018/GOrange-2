@@ -35,7 +35,7 @@ func GetGym(w http.ResponseWriter, r *http.Request) {
 func DeleteGym(w http.ResponseWriter, r *http.Request) {
 	gymID := chi.URLParam(r, "gymID")
 	response := make(map[string]string)
-	response["message"] = "Deleted Gym"
+	response["message"] = "Deleted Gym " + gymID
 	render.JSON(w, r, response) // Return some demo response
 }
 
