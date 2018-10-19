@@ -8,9 +8,10 @@ import (
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
 	"github.com/497-fall2018/GOrange-2/features/gym"
+	"github.com/497-fall2018/GOrange-2/internal/config"
 )
 
-func Routes() *chi.Mux {
+func Routes(configuration *config.Config) *chi.Mux {
 	router := chi.NewRouter()
 	router.Use(
 		render.SetContentType(render.ContentTypeJSON), // sets content type to json
@@ -21,13 +22,17 @@ func Routes() *chi.Mux {
 	)
 	// version apis so you can update without breaking i
 	router.Route("/v1", func(r chi.Router) {
-		r.Mount("/api/gym", gym.Routes())
+		r.Mount("/api/gym", gym.Routes(configuration))
 	})
 
 	return router
 }
 
 func main() {
+	configuration, err := config.New()
+	if err != nil {
+		log.Panicln("Configuration error", err)
+	}
 	router := Routes()
 
 	walkFunc := func(method string, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {
@@ -38,6 +43,7 @@ func main() {
 		log.Panicf("Logging err: %s\n", err.Error()) // panic if there is an error
 	}
 
+	log.Println("Serving application at PORT :" + configuration.Constants.PORT)
 	log.Fatal(http.ListenAndServe(":8080", router)) // Note, the port is usually gotten from the environment.
 
 }
