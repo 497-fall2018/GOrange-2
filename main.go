@@ -33,7 +33,7 @@ func main() {
 	if err != nil {
 		log.Panicln("Configuration error", err)
 	}
-	router := Routes()
+	router := Routes(configuration)
 
 	walkFunc := func(method string, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {
 		log.Printf("%s %s\n", method, route) // Walk and print out all routes
@@ -45,5 +45,4 @@ func main() {
 
 	log.Println("Serving application at PORT :" + configuration.Constants.PORT)
 	log.Fatal(http.ListenAndServe(":8080", router)) // Note, the port is usually gotten from the environment.
-
 }

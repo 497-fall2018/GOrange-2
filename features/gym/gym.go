@@ -2,6 +2,8 @@ package gym
 
 import (
 	"net/http"
+	"encoding/json"
+	"gopkg.in/mgo.v2/bson"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
@@ -47,20 +49,25 @@ func DeleteGym(configuration *config.Config) http.HandlerFunc {
 
 func CreateGym(configuration *config.Config) http.HandlerFunc {
 	return func (w http.ResponseWriter, r *http.Request) {
-		response := make(map[string]string)
-		response["message"] = "Created Gym successfully"
-		render.JSON(w, r, response) // Return some demo response
+		var gym Gym
+		if err := json.NewDecoder(r.Body).Decode(&gym); err != nil {
+			render.JSON(w, r, "Invalid request payload")
+			return
+		}
+		if err := configuration.Database.C("gym").Insert(&gym); err != nil {
+			render.JSON(w, r, err.Error())
+			return
+		}
+		render.JSON(w, r, gym) // Return some demo response
 	}
 }
 
 func GetAllGyms(configuration *config.Config) http.HandlerFunc {
 	return func (w http.ResponseWriter, r *http.Request) {
-		gyms := []Gym{
-			{
-				Open:  false,
-				Title: "Hello world",
-				Body:  "Heloo world from planet earth",
-			},
+		var gyms []Gym
+		err := configuration.Database.C("gym").Find(bson.M{}).All(&gyms)
+		if err != nil {
+			render.JSON(w, r, err)
 		}
 		render.JSON(w, r, gyms) // A chi router helper for serializing and returning json
 	}
