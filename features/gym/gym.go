@@ -11,7 +11,7 @@ import (
 )
 
 type Gym struct {
-	Open  bool `json:"open"`
+	Open  string `json:"open"`
 	Title string `json:"title"`
 	Body  string `json:"body"`
 }
@@ -20,7 +20,7 @@ func Routes(configuration *config.Config) *chi.Mux {
 	router := chi.NewRouter()
 	router.Get("/{gymID}", GetGym(configuration))
 	router.Delete("/{gymID}", DeleteGym(configuration))
-	router.Post("/{gymTitle}", EditGym(configuration))
+	router.Post("/edit", EditGym(configuration))
 	router.Post("/", CreateGym(configuration))
 	router.Get("/", GetAllGyms(configuration))
 	return router
@@ -30,7 +30,7 @@ func GetGym(configuration *config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		gymID := chi.URLParam(r, "gymID")
 		gyms := Gym{
-			Open:  false,
+			Open:  "Full",
 			Title: "Hello world",
 			Body:  gymID,
 		}
@@ -54,9 +54,9 @@ func EditGym(configuration *config.Config) http.HandlerFunc {
 			http.Error(w, err.Error(), 400)
 			return
 		}
-		gymTitle := chi.URLParam(r, "gymTitle")
 
-		if err := configuration.Database.C("gym").Update(bson.M{"title" : gymTitle}, &gym); err != nil {
+
+		if err := configuration.Database.C("gym").Update(bson.M{"title" : gym.Title}, &gym); err != nil {
 			http.Error(w, err.Error(), 500)
 			return
 		}
@@ -82,6 +82,7 @@ func CreateGym(configuration *config.Config) http.HandlerFunc {
 
 func GetAllGyms(configuration *config.Config) http.HandlerFunc {
 	return func (w http.ResponseWriter, r *http.Request) {
+		enableCors(&w)
 		var gyms []Gym
 		err := configuration.Database.C("gym").Find(bson.M{}).All(&gyms)
 		if err != nil {
@@ -90,4 +91,8 @@ func GetAllGyms(configuration *config.Config) http.HandlerFunc {
 		}
 		render.JSON(w, r, gyms) // A chi router helper for serializing and returning json
 	}
+}
+
+func enableCors(w *http.ResponseWriter) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 }
