@@ -20,6 +20,7 @@ func Routes(configuration *config.Config) *chi.Mux {
 	router := chi.NewRouter()
 	router.Get("/{gymID}", GetGym(configuration))
 	router.Delete("/{gymID}", DeleteGym(configuration))
+	router.Post("/{gymTitle}", EditGym(configuration))
 	router.Post("/", CreateGym(configuration))
 	router.Get("/", GetAllGyms(configuration))
 	return router
@@ -43,6 +44,23 @@ func DeleteGym(configuration *config.Config) http.HandlerFunc {
 		response := make(map[string]string)
 		response["message"] = "Deleted Gym " + gymID
 		render.JSON(w, r, response) // Return some demo response
+	}
+}
+
+func EditGym(configuration *config.Config) http.HandlerFunc {
+	return func (w http.ResponseWriter, r *http.Request) {
+		var gym Gym
+		if err := json.NewDecoder(r.Body).Decode(&gym); err != nil {
+			render.JSON(w, r, "Invalid request payload")
+			return
+		}
+		gymTitle := chi.URLParam(r, "gymTitle")
+
+		if err := configuration.Database.C("gym").Update(bson.M{"title" : gymTitle}, &gym); err != nil {
+			render.JSON(w, r, err.Error())
+			return
+		}
+		render.JSON(w, r, gym)
 	}
 }
 
