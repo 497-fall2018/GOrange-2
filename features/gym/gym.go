@@ -51,13 +51,13 @@ func EditGym(configuration *config.Config) http.HandlerFunc {
 	return func (w http.ResponseWriter, r *http.Request) {
 		var gym Gym
 		if err := json.NewDecoder(r.Body).Decode(&gym); err != nil {
-			render.JSON(w, r, "Invalid request payload")
+			http.Error(w, err.Error(), 400)
 			return
 		}
 		gymTitle := chi.URLParam(r, "gymTitle")
 
 		if err := configuration.Database.C("gym").Update(bson.M{"title" : gymTitle}, &gym); err != nil {
-			render.JSON(w, r, err.Error())
+			http.Error(w, err.Error(), 500)
 			return
 		}
 		render.JSON(w, r, gym)
@@ -69,11 +69,11 @@ func CreateGym(configuration *config.Config) http.HandlerFunc {
 	return func (w http.ResponseWriter, r *http.Request) {
 		var gym Gym
 		if err := json.NewDecoder(r.Body).Decode(&gym); err != nil {
-			render.JSON(w, r, "Invalid request payload")
+			http.Error(w, err.Error(), 400)
 			return
 		}
 		if err := configuration.Database.C("gym").Insert(&gym); err != nil {
-			render.JSON(w, r, err.Error())
+			http.Error(w, err.Error(), 500)
 			return
 		}
 		render.JSON(w, r, gym) // Return some demo response
@@ -85,7 +85,8 @@ func GetAllGyms(configuration *config.Config) http.HandlerFunc {
 		var gyms []Gym
 		err := configuration.Database.C("gym").Find(bson.M{}).All(&gyms)
 		if err != nil {
-			render.JSON(w, r, err)
+			http.Error(w, err.Error(), 500)
+			return
 		}
 		render.JSON(w, r, gyms) // A chi router helper for serializing and returning json
 	}
